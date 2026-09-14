@@ -1,0 +1,13 @@
+# Configuration/Services.yaml
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  LIA\LiaImageserver\:
+    resource: '../Classes/*'
+    exclude: '../Classes/Domain/Model/*'
+
+  TYPO3\CMS\Core\Service\FlexFormService:
+    public: true

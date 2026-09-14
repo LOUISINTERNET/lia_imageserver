@@ -1,0 +1,8 @@
+# cat=basic/enable/2; type=string; label=Image Quality
+imageQuality=80
+
+# cat=basic/enable/3; type=string; label=Allowed file extensions
+allowedFileExtensions=
+
+# cat=basic/enable/4; type=string; label=Additional Parameter
+additionalParameter=

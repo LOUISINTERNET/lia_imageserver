@@ -1,0 +1,3 @@
+plugin.tx_liaimageserver.settings {
+  responsiveImageViewHelperTemplatePath = EXT:lia_imageserver/Resources/Private/Templates/ViewHelpers/Widget/ResponsiveImage/Index.html
+}

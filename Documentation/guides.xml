@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- See  https://docs.typo3.org/permalink/h2document:guides-xml for documentation on this file-->
+<guides
+    xmlns="https://www.phpdoc.org/guides"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://www.phpdoc.org/guides vendor/phpdocumentor/guides-cli/resources/schema/guides.xsd"
+    input-format="rst"
+    >
+    <project
+        title="LIA Imageserver"
+        copyright="since 2024 by LOUIS INTERNET"
+    />
+    <extension
+        class="\T3Docs\Typo3DocsTheme\DependencyInjection\Typo3DocsThemeExtension"
+        project-home="https://extensions.typo3.org/extension/lia_imageserver"
+        project-contact="mailto:devs@louis.info"
+        project-repository="https://github.com/LOUISINTERNET/lia_imageserver"
+        project-issues="https://github.com/LOUISINTERNET/lia_imageserver/issues"
+        report-issues="https://github.com/LOUISINTERNET/lia_imageserver/issues/new"
+        edit-on-github="LOUISINTERNET/lia_imageserver"
+        edit-on-github-branch="main"
+        typo3-core-preferred="stable"
+        interlink-shortcode="lia/lia_imageserver"
+    />
+</guides>

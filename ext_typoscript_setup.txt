@@ -1,0 +1,6 @@
+page {
+  headerData {
+    36951658 = USER
+    36951658.userFunc = LIA\LiaImageserver\Utilities\TypoScript\ResourcesFunctions->getPrefetchs
+  }
+}

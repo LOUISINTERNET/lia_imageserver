@@ -1,0 +1,27 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+
+  <f:for each="{config.webPSourceSets}" as="source">
+    <source srcset="{source.srcset}" sizes="{source.sizes}" type="image/webp" media="{source.media}"
+      {f:if(condition: devPublicUrl, then: 'data-publicurl="{devPublicUrl}"')}
+    >
+  </f:for>
+  <f:for each="{config.sources}" as="source">
+    <source srcset="{source.srcset}" sizes="{source.sizes}" media="{source.media}"
+      {f:if(condition: devPublicUrl, then: 'data-publicurl="{devPublicUrl}"')}
+    >
+  </f:for>
+
+  <f:if condition="{config.default}">
+    <img src="{config.default.src}" srcset="{config.default.srcset}" sizes="{config.default.sizes}"
+      alt="{config.meta.alt}" title="{config.meta.title}" loading="{config.meta.loading}"
+      {f:if(condition: fetchPriority, then: 'fetchPriority="{fetchPriority}"')}
+      {f:if(condition: width, then: 'width="{width}"')}
+      {f:if(condition: height, then: 'height="{height}"')}
+      {f:if(condition: config.class, then: 'class="{config.class}"')}
+      {f:if(condition: widgetConfig.objectFit, then: 'data-object-fit="{widgetConfig.objectFit}"')}
+      {f:if(condition: widgetConfig.objectFit, then: 'data-object-position="{widgetConfig.objectPositionLeft}
+      {widgetConfig.objectPositionTop}"')}
+      {f:if(condition: devPublicUrl, then: 'data-publicurl="{devPublicUrl}"')}
+    >
+  </f:if>
+</html>

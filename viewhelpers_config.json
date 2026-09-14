@@ -1,0 +1,12 @@
+{
+	"name": "LiaImageserver",
+	"label": "Imageserver",
+	"namespaceAlias": "lim",
+	"targetNamespace": "http://typo3.org/ns/LIA/LiaImageserver/ViewHelpers",
+    "templates": {
+        "root": "Build/Documentation/templates/lia/Root.rst",
+        "namespace": "Build/Documentation/templates/lia/Namespace.rst",
+        "group": "Build/Documentation/templates/lia/Group.rst",
+        "viewHelper": "Build/Documentation/templates/lia/ViewHelper.rst"
+    }
+}

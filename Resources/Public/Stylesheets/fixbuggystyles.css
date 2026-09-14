@@ -1,0 +1,21 @@
+.t3js-image-manipulation-preview.media-object,
+.t3js-image-manipulation-preview.media-object img.thumbnail {
+  max-height: none !important;
+  max-width: 300px !important;
+}
+
+.t3js-image-manipulation-preview.media-object img.thumbnail {
+  width: 100%;
+}
+
+.media-gallery__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-top: 20px;
+}
+
+.media-gallery__item {
+  width: auto !important;
+  flex: 0 1 auto;
+}

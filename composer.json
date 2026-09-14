@@ -1,0 +1,80 @@
+{
+	"name": "lia/lia_imageserver",
+	"type": "typo3-cms-extension",
+	"keywords": [ "Imageserver", "Imageserver Adapter", "Adapter" ],
+	"description": "TYPO3 extension with ViewHelpers for responsive images, supporting external image servers but fully functional on its own.",
+	"homepage": "https://www.louis.info",
+	"authors": [
+		{
+			"name": "LOUIS TYPO3 Developers",
+			"email": "devs@louis.info",
+			"homepage": "https://www.louis.info",
+			"role": "Developer"
+		}
+	],
+	"support": {
+		"email": "devs@louis.info",
+		"docs": "https://docs.typo3.org/p/lia/lia_imageserver/main/en-us/",
+		"source": "https://github.com/LOUISINTERNET/lia_imageserver",
+		"issues": "https://github.com/LOUISINTERNET/lia_imageserver/issues"
+	},
+	"license": "GPL-2.0-or-later",
+	"require": {
+		"typo3/cms-core": "^13.4 || ^14.3"
+	},
+	"suggest": {
+		"lia/lia_middleware_imgix": "Imageserver middleware for imgix.com"
+	},
+	"require-dev": {
+		"typo3/testing-framework": "^8.0 || ^9.0",
+		"typo3/coding-standards": "^0.8.0",
+		"t3docs/fluid-documentation-generator": "^4.4",
+		"ssch/typo3-rector": "^3.11",
+		"a9f/typo3-fractor": "^0.5"
+	},
+	"autoload": {
+		"psr-4": {
+			"LIA\\LiaImageserver\\": "Classes"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"LIA\\LiaImageserver\\Tests\\": "Tests"
+		}
+	},
+	"replace": {
+		"typo3-ter/lia-imageserver": "self.version"
+	},
+	"config": {
+		"vendor-dir": ".Build/vendor",
+		"bin-dir": ".Build/bin",
+		"allow-plugins": {
+			"typo3/class-alias-loader": true,
+			"typo3/cms-composer-installers": true,
+			"a9f/fractor-extension-installer": true
+		}
+	},
+	"scripts": {
+		"post-autoload-dump": [
+			"TYPO3\\TestingFramework\\Composer\\ExtensionTestEnvironment::prepare"
+		],
+		"viewhelper-docs": [
+			"FLUID_DOCUMENTATION_OUTPUT_DIR=Documentation/ViewHelpers .Build/bin/fluidDocumentation generate viewhelpers_config.json"
+		],
+		"build-docs": [
+			"docker run --rm --pull always -v $(pwd):/project -it ghcr.io/typo3-documentation/render-guides:latest --config=Documentation"
+		],
+		"build-full-doc": [
+			"@viewhelper-docs",
+			"@build-docs"
+		]
+
+	},
+	"extra": {
+		"typo3/cms": {
+			"cms-package-dir": "{$vendor-dir}/typo3/cms",
+			"web-dir": ".Build/public",
+			"extension-key": "lia_imageserver"
+		}
+	}
+}

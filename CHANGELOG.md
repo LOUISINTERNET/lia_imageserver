@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.9] - 2026-09-14
+
+### Changed
+
+- Documentation moved from `README.md` into `Documentation/` (rendered at
+  https://docs.typo3.org/p/lia/lia_imageserver/main/en-us/); the README is
+  reduced to an overview with links.
+- Public release preparation: contact address unified to devs@louis.info,
+  TER publishing workflow added, documentation index and ViewHelper
+  reference regenerated.
+
 ## [2.3.8] - 2026-09-14
 
 ### Changed

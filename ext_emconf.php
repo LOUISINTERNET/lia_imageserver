@@ -8,7 +8,7 @@ $EM_CONF[$_EXTKEY] = [
     'author_company' => 'LOUIS INTERNET',
     'author_email' => 'devs@louis.info',
     'state' => 'stable',
-    'version' => '2.3.8',
+    'version' => '2.3.9',
     'constraints' => [
         // Single contiguous range — cannot express the v14.0-v14.2 gap that
         // composer.json excludes via "^13.4 || ^14.3". Composer is authoritative.

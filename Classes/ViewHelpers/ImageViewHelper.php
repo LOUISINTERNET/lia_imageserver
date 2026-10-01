@@ -10,11 +10,13 @@
 namespace LIA\LiaImageserver\ViewHelpers;
 
 use LIA\LiaImageserver\Helper;
+use LIA\LiaImageserver\Service\AutoDimensionException;
 use LIA\LiaImageserver\Service\ImageService;
 use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Imaging\ImageManipulation\Area;
 use TYPO3\CMS\Core\Imaging\ImageManipulation\CropVariantCollection;
+use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\CMS\Core\Resource\Exception\ResourceDoesNotExistException;
 use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
@@ -108,8 +110,8 @@ class ImageViewHelper extends AbstractTagBasedViewHelper
         $this->registerArgument('cropVariant', 'string', 'select a cropping variant, in case multiple croppings have been specified or stored in FileReference', false, 'default');
         $this->registerArgument('fileExtension', 'string', 'Custom file extension to use');
 
-        $this->registerArgument('width', 'string', 'width of the image. This can be a numeric value representing the fixed width of the image in pixels. But you can also perform simple calculations by adding "m" or "c" to the value. See imgResource.width for possible options.');
-        $this->registerArgument('height', 'string', 'height of the image. This can be a numeric value representing the fixed height of the image in pixels. But you can also perform simple calculations by adding "m" or "c" to the value. See imgResource.width for possible options.');
+        $this->registerArgument('width', 'string', 'width of the image. This can be a numeric value representing the fixed width of the image in pixels. But you can also perform simple calculations by adding "m" or "c" to the value. See imgResource.width for possible options. "auto" derives the width from the ratio of the crop variant (or of the whole image) at the given numeric height; only for FAL images.');
+        $this->registerArgument('height', 'string', 'height of the image. This can be a numeric value representing the fixed height of the image in pixels. But you can also perform simple calculations by adding "m" or "c" to the value. See imgResource.width for possible options. "auto" derives the height from the ratio of the crop variant (or of the whole image) at the given numeric width; only for FAL images.');
         $this->registerArgument('minWidth', 'int', 'minimum width of the image');
         $this->registerArgument('minHeight', 'int', 'minimum height of the image');
         $this->registerArgument('maxWidth', 'int', 'maximum width of the image');
@@ -152,11 +154,17 @@ class ImageViewHelper extends AbstractTagBasedViewHelper
 
             $this->tag->addAttribute('src', $src);
 
-            if (!empty($this->arguments['width'])) {
-                $this->tag->addAttribute('width', $this->arguments['width']);
-            }
-            if (!empty($this->arguments['height'])) {
-                $this->tag->addAttribute('height', $this->arguments['height']);
+            foreach (['width', 'height'] as $side) {
+                if ($this->arguments[$side] === 'auto') {
+                    $this->failOnAutoDimension(new AutoDimensionException(
+                        sprintf('%s "auto" needs a FAL image to read the crop from, got the external src "%s".', $side, $src),
+                        1790842803
+                    ));
+                    continue;
+                }
+                if (!empty($this->arguments[$side])) {
+                    $this->tag->addAttribute($side, $this->arguments[$side]);
+                }
             }
             return $this->tag->render();
         }
@@ -239,11 +247,28 @@ class ImageViewHelper extends AbstractTagBasedViewHelper
             GeneralUtility::makeInstance(LoggerInterface::class)->warning('ImageViewHelper: file has been replaced with a folder', ['exception' => $exception]);
         } catch (\RuntimeException $exception) {
             GeneralUtility::makeInstance(LoggerInterface::class)->warning('ImageViewHelper: file is outside of a storage', ['exception' => $exception]);
+        } catch (AutoDimensionException $exception) {
+            $this->failOnAutoDimension($exception);
         } catch (\InvalidArgumentException $exception) {
             GeneralUtility::makeInstance(LoggerInterface::class)->warning('ImageViewHelper: file storage does not exist', ['exception' => $exception]);
         }
 
         return $this->tag->render();
+    }
+
+    /**
+     * A width or height `auto` that cannot be derived is an error of the template: shown in
+     * development, logged elsewhere so that the page is still delivered.
+     */
+    private function failOnAutoDimension(AutoDimensionException $exception): void
+    {
+        if (Environment::getContext()->isDevelopment()) {
+            throw $exception;
+        }
+        GeneralUtility::makeInstance(LogManager::class)->getLogger(static::class)->error(
+            static::class . ': width or height "auto" cannot be derived.',
+            ['exception' => $exception],
+        );
     }
 
     /**

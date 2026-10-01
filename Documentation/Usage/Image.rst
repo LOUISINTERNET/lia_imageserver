@@ -81,6 +81,28 @@ Additional arguments
             requested width of the call) is injected automatically.
         -   array
 
+..  note::
+
+    A `sourceSets` entry without `h` inherits the ratio of the numeric
+    `width` and `height` arguments. How the image is fitted into that size
+    is decided by the image server backend (lia_middleware_imgix crops it,
+    unless the source set or `imageServerOptions` set `fit`). Locally
+    processed files fit within the box.
+
+..  note::
+
+    `height="auto"` derives the height from the ratio of the crop variant at
+    the numeric `width`, or from the whole image when no crop is stored;
+    `width="auto"` derives the width at the numeric `height` the same way, e.g.
+    for rows of images with a fixed height. Use
+    it for crop variants that allow a free ratio, or whose stored crops have
+    different ratios: a fixed height would cut those images to the
+    template's shape once the backend crops to width and height. The rendered
+    `width`/`height` attributes keep the crop's ratio, and `sourceSets`
+    entries carry only `w`. Supported for FAL images only: an external `src`
+    with `auto`, `auto` on both sides or an image without dimensions throws in
+    development and is logged otherwise.
+
 ..  _usage-image-example:
 
 Example

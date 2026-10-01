@@ -28,6 +28,8 @@ trait RecordingImageServiceBody
 
     public readonly \ArrayObject $webPSourceSetInstructions;
 
+    public readonly \ArrayObject $externalImageArguments;
+
     private readonly ?FileInterface $imageToReturn;
 
     public function __construct(?FileInterface $imageToReturn = null)
@@ -35,7 +37,15 @@ trait RecordingImageServiceBody
         $this->liaInstructionSets = new \ArrayObject();
         $this->defaultSourceSetInstructions = new \ArrayObject();
         $this->webPSourceSetInstructions = new \ArrayObject();
+        $this->externalImageArguments = new \ArrayObject();
         $this->imageToReturn = $imageToReturn;
+    }
+
+    // Provided in production by the image server backend that overrides this service (SYS/Objects)
+    public function getImageUriForExternalFile($src, $arguments): string
+    {
+        $this->externalImageArguments[] = $arguments;
+        return 'https://external.example.com/example.jpg';
     }
 
     public function getImage(string $src, $image, bool $treatIdAsReference): FileInterface

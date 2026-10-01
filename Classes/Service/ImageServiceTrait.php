@@ -35,12 +35,18 @@ trait ImageServiceTrait
 {
     protected readonly Helper $helper;
 
-    public function __construct(
-        ResourceFactory $resourceFactory,
-        Helper $helper,
-    ) {
+    /**
+     * @internal Obtain the service through dependency injection or GeneralUtility::makeInstance().
+     *
+     * Takes exactly what Extbase\ServiceProvider::getImageService() passes: core builds the
+     * Extbase ImageService there and reaches this class through the SYS/Objects override
+     * (ext_localconf.php). A second required argument would make that factory fail.
+     * The helper goes through makeInstance() so that a SYS/Objects override of the helper applies.
+     */
+    public function __construct(ResourceFactory $resourceFactory)
+    {
         parent::__construct($resourceFactory);
-        $this->helper = $helper;
+        $this->helper = GeneralUtility::makeInstance(Helper::class);
     }
 
     /**
@@ -92,6 +98,7 @@ trait ImageServiceTrait
             $image = $image->getOriginalFile();
         }
         $processingInstructions = $this->dispatchModifyProcessingInstructionsEvent($image, $processingInstructions);
+        $processingInstructions = $this->resolveAutoDimension($image, $processingInstructions);
 
         $processingInstructions = $this->ensureFitWithinExactDimensions($processingInstructions);
 
@@ -118,6 +125,73 @@ trait ImageServiceTrait
         }
         return parent::applyProcessingInstructions($image, $processingInstructions);
 
+    }
+
+    /**
+     * Resolve `height: 'auto'` or `width: 'auto'` to the size that keeps the ratio of the
+     * crop at the requested other side.
+     *
+     * Crop variants with a free ratio, or crops stored before a variant's ratio changed, give
+     * every image its own shape. A fixed second side would cut such an image to the template's
+     * shape as soon as the backend fills width and height exactly (imgix `fit=crop`). `auto`
+     * keeps the editor's ratio for the main src and for the rendered width/height attributes;
+     * source sets carry only `w` and keep that ratio on their own. Without a crop area the
+     * whole image counts.
+     *
+     * @param FileInterface $image
+     * @param array $processingInstructions
+     *
+     * @return array
+     */
+    private function resolveAutoDimension(FileInterface $image, array $processingInstructions): array
+    {
+        $widthIsAuto = ($processingInstructions['width'] ?? null) === 'auto';
+        $heightIsAuto = ($processingInstructions['height'] ?? null) === 'auto';
+        if (!$widthIsAuto && !$heightIsAuto) {
+            return $processingInstructions;
+        }
+        if ($widthIsAuto && $heightIsAuto) {
+            throw new AutoDimensionException(
+                'width and height "auto" derive each side from the other; give one of them a numeric size.',
+                1790842804
+            );
+        }
+
+        [$derivedSide, $givenSide] = $heightIsAuto ? ['height', 'width'] : ['width', 'height'];
+        $givenSize = $processingInstructions[$givenSide] ?? null;
+        if (!is_numeric($givenSize)) {
+            throw new AutoDimensionException(
+                sprintf('%s "auto" needs a numeric %s to derive it from, got %s.', $derivedSide, $givenSide, var_export($givenSize, true)),
+                1790842801
+            );
+        }
+
+        $crop = $processingInstructions['crop'] ?? null;
+        if ($crop instanceof Area && !$crop->isEmpty()) {
+            $sourceWidth = $crop->getWidth();
+            $sourceHeight = $crop->getHeight();
+        } else {
+            $sourceWidth = (float)$image->getProperty('width');
+            $sourceHeight = (float)$image->getProperty('height');
+        }
+
+        if ($sourceWidth <= 0 || $sourceHeight <= 0) {
+            throw new AutoDimensionException(
+                sprintf(
+                    '%s "auto" cannot be derived for "%s": expected positive source dimensions, got %sx%s.',
+                    $derivedSide,
+                    $image->getIdentifier(),
+                    $sourceWidth,
+                    $sourceHeight
+                ),
+                1790842802
+            );
+        }
+
+        $ratio = $heightIsAuto ? $sourceHeight / $sourceWidth : $sourceWidth / $sourceHeight;
+        $processingInstructions[$derivedSide] = (string)(int)round((float)$givenSize * $ratio);
+
+        return $processingInstructions;
     }
 
     /**
@@ -180,10 +254,9 @@ trait ImageServiceTrait
      *  - either dimension is non-numeric (already a string with semantics).
      *
      * For the Imgix code path, `transformProcessingInstructions()` strips the
-     * `m` suffix again and treats the value as an explicit width/height, so
-     * the only behavioural difference there is that no `cropIS['fit'] = 'crop'`
-     * is auto-applied — matching the editor intent that the entire source
-     * remain visible.
+     * `m` suffix again and treats the value as an explicit width/height; with
+     * both given it still auto-applies `cropIS['fit'] = 'crop'`, so imgix crops
+     * to the requested box instead of fitting the source within it.
      *
      * @param array $processingInstructions
      * @return array

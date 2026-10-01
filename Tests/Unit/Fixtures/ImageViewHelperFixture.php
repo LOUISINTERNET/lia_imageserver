@@ -23,4 +23,9 @@ final class ImageViewHelperFixture extends ImageViewHelper
     {
         return $this->generateSrcsets($cropArea, $image);
     }
+
+    public function callGenerateSrcsetsForExternalImage(Area $cropArea, string $url): array
+    {
+        return $this->generateSrcsets($cropArea, $url, [], true);
+    }
 }

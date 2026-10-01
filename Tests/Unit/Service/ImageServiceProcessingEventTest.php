@@ -13,6 +13,7 @@ namespace LIA\LiaImageserver\Tests\Unit\Service;
 
 use LIA\LiaImageserver\Domain\Model\File;
 use LIA\LiaImageserver\Event\ModifyProcessingInstructionsEvent;
+use LIA\LiaImageserver\Helper;
 use LIA\LiaImageserver\Service\ImageService;
 use LIA\LiaImageserver\Tests\Unit\Fixtures\HelperFake;
 use LIA\LiaImageserver\Tests\Unit\Fixtures\RecordingEventDispatcher;
@@ -259,10 +260,9 @@ final class ImageServiceProcessingEventTest extends UnitTestCase
 
     private function createImageService(bool $isImageServerImage, bool $isSkipImageServer): ImageService
     {
-        return new ImageService(
-            self::createStub(ResourceFactory::class),
-            new HelperFake($isImageServerImage, $isSkipImageServer),
-        );
+        GeneralUtility::addInstance(Helper::class, new HelperFake($isImageServerImage, $isSkipImageServer));
+
+        return new ImageService(self::createStub(ResourceFactory::class));
     }
 
     private function createFile(): File

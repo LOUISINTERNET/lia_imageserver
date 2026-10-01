@@ -12,12 +12,11 @@ declare(strict_types=1);
 namespace LIA\LiaImageserver\Tests\Unit\ViewHelpers\Uri;
 
 use LIA\LiaImageserver\Domain\Model\File;
-use LIA\LiaImageserver\Service\ImageService;
+use LIA\LiaImageserver\Tests\Unit\Fixtures\ImageServiceDoubleRegistration;
 use LIA\LiaImageserver\Tests\Unit\Fixtures\RecordingImageService;
 use LIA\LiaImageserver\ViewHelpers\Uri\ImageViewHelper;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -26,13 +25,15 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  */
 final class ImageViewHelperLiaContextTest extends UnitTestCase
 {
+    use ImageServiceDoubleRegistration;
+
     protected bool $resetSingletonInstances = true;
 
     #[Test]
     public function renderingCarriesLiaContextWithRequestedWidth(): void
     {
         $service = new RecordingImageService($this->createFile());
-        GeneralUtility::addInstance(ImageService::class, $service);
+        $this->registerImageServiceDouble($service);
         $viewHelper = new ImageViewHelper();
         $viewHelper->setArguments($this->buildArguments([
             'width' => '400',
@@ -54,7 +55,7 @@ final class ImageViewHelperLiaContextTest extends UnitTestCase
     public function renderingWithoutLiaContextAndWidthAddsNoContextKey(): void
     {
         $service = new RecordingImageService($this->createFile());
-        GeneralUtility::addInstance(ImageService::class, $service);
+        $this->registerImageServiceDouble($service);
         $viewHelper = new ImageViewHelper();
         $viewHelper->setArguments($this->buildArguments([]));
 

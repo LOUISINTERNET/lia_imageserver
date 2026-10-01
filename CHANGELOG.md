@@ -5,7 +5,87 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.3.10] - 2026-10-01
+
+### Added
+
+- **`height="auto"` and `width="auto"` on `lim:image` and `lim:uri.image`** derive that side
+  from the ratio of the crop variant at the numeric other side, or from the whole image without
+  a stored crop — `width="auto"` for rows of images with a fixed height.
+  Resolved in `ImageServiceTrait::applyProcessingInstructionsLia()` right after the
+  `ModifyProcessingInstructionsEvent`, so the main `src`, the `width`/`height` attributes and
+  the overriding ViewHelpers of lia_middleware_imgix all see the derived value. Since
+  lia_middleware_imgix 4.0.2 / 3.0.4 crops every URL with `w` and `h`, a fixed height cuts
+  images whose crop ratio differs from the template's (free crop variants, crops stored before
+  a variant's ratio changed). `sourceSets` entries keep only `w`, because `auto` is not numeric
+  and no height is derived for them. A non-numeric other side throws (`1790842801`), so does an
+  image without stored dimensions (`1790842802`), an external `src` (`1790842803`), which
+  has no crop to read, and `auto` on both sides (`1790842804`). Pinned by
+  `ImageServiceAutoDimensionTest`.
+
+### Fixed
+
+- **`f:image`, `f:media` and `f:uri.image` bypassed the image server since 2.3.0.**
+  Core builds the Extbase `ImageService` in `Extbase\ServiceProvider::getImageService()`.
+  The service provider pass overrides any `Services.yaml` definition of that id, so the
+  `class:` alias added in 2.3.0 never took effect: these ViewHelpers rendered through the
+  plain core service, processed images locally and never dispatched
+  `ModifyProcessingInstructionsEvent`. The override is back in `SYS/Objects`, which that
+  factory resolves, and the dead alias is gone. `ImageService::__construct()` takes only the
+  `ResourceFactory` again — the arguments the core factory passes — and resolves the helper
+  through `makeInstance()`, so a `SYS/Objects` override of the helper still applies.
+  Pinned by `ExtbaseImageServiceOverrideTest`.
+- **Derived source-set heights: this extension passes the requested size only.** Since 2.3.5
+  `generateSrcsets()` derives `h` from the ViewHelper's width/height, so every candidate keeps
+  the ratio of the main `src`. How that size is filled is the decision of the backend middleware:
+  imgix defaults to `fit=clip` and delivered candidates narrower than their `w` descriptor, which
+  lia_middleware_imgix 4.0.2 / 3.0.4 fixes by requesting `fit=crop` for `w` + `h`. This extension
+  adds no `fit` of its own, so other backends stay free to choose. **The fix therefore needs
+  lia_middleware_imgix ≥ 4.0.2 or ≥ 3.0.4; the 2.3.x line of lia_middleware_imgix does not get it**
+  and keeps delivering narrower candidates. Pinned by `ImageViewHelperDerivedHeightTest`.
+- **An `auto` that cannot be derived surfaces in development** and is logged in production,
+  where the page is delivered without the image (an external image keeps its numeric side).
+  It used to reach the catch for a missing storage, whose `LoggerInterface` cannot be
+  instantiated, so the rendering ended with an `Error` in every context. Pinned by
+  `AutoDimensionFailureTest`.
+
+### Changed
+
+- **`ImageService::__construct()` is marked `@internal`** and no longer accepts a `Helper`.
+  Obtain the service through dependency injection or `GeneralUtility::makeInstance()`. A helper
+  passed positionally is ignored, a named `helper:` argument fails. Container and core factory
+  are unaffected.
+- **Core users of the Extbase `ImageService` go through the 2.3.x processing for the first
+  time — and are delivered by the image server backend again.** With the override active again,
+  `f:image`, `f:media`, `f:uri.image` and core services using the Extbase `ImageService` run
+  `applyProcessingInstructions()` of this extension. With lia_middleware_imgix loaded, their
+  image-server files are served through imgix instead of being processed locally, so their URLs
+  change from `/fileadmin/_processed_/…` (or the storage's processed folder) to imgix URLs.
+  Check pages that use these ViewHelpers after updating:
+  - on locally processed files, a bare `width` + `height` becomes a maximum (`m`, fit within)
+    instead of core's exact size, so the rendered `width`/`height` attributes can change;
+  - on image-server files, `width` + `height` now crop (`fit=crop`).
+- **Who sees a change:** only renderings with both width and height (derived source-set heights,
+  explicit `w` + `h`) and output of `f:image`, `f:media` and `f:uri.image`. Templates that use
+  `lim:image` only with `ar`/`fit` or only with `w` render identical markup (checked on a
+  TYPO3 14.3 project: 16 pages, 420 image URLs unchanged).
+- **Visible cropping in responsive images** comes with lia_middleware_imgix 4.0.2 / 3.0.4, not
+  with this release: together they crop source-set candidates of a fixed-ratio `lim:image`
+  rendering to the requested ratio. Locally processed files are not cropped; their candidates
+  still fit within the box and can be narrower than their `w` descriptor (known limitation).
+
+### Known limitations
+
+- **`auto` errors need lia_middleware_imgix ≥ 4.0.3 or ≥ 3.0.5 to surface.** Its ViewHelpers override
+  `lim:image` and `lim:uri.image`; older versions swallow an `auto` that cannot be derived in an
+  empty catch, and send `auto` of an external image as `w=0`/`h=0`. Deriving `auto` itself works
+  with every lia_middleware_imgix version.
+- An explicit `fit` in `imageServerOptions` is kept for source-set candidates, but the main `src`
+  of image-server files still crops through `cropIS` when width and height are set (behaviour
+  from before this release).
+- Locally processed files: source-set candidates with a derived height fit within the box, so a
+  source whose ratio differs from the requested one yields candidates narrower than their `w`
+  descriptor.
 
 ## [2.3.9] - 2026-09-14
 

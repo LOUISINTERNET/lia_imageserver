@@ -11,7 +11,3 @@ services:
 
   LIA\LiaImageserver\Service\ImageService:
     public: true
-
-  # Override Extbase ImageService with LIA implementation
-  TYPO3\CMS\Extbase\Service\ImageService:
-    class: LIA\LiaImageserver\Service\ImageService

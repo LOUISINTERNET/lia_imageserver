@@ -13,8 +13,8 @@ namespace LIA\LiaImageserver\Tests\Unit\ViewHelpers;
 
 use LIA\LiaImageserver\Domain\Model\File;
 use LIA\LiaImageserver\Helper;
-use LIA\LiaImageserver\Service\ImageService;
 use LIA\LiaImageserver\Tests\Unit\Fixtures\HelperFake;
+use LIA\LiaImageserver\Tests\Unit\Fixtures\ImageServiceDoubleRegistration;
 use LIA\LiaImageserver\Tests\Unit\Fixtures\ImageViewHelperFixture;
 use LIA\LiaImageserver\Tests\Unit\Fixtures\RecordingImageService;
 use LIA\LiaImageserver\ViewHelpers\ImageViewHelper;
@@ -32,6 +32,8 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  */
 final class ImageViewHelperLiaContextTest extends UnitTestCase
 {
+    use ImageServiceDoubleRegistration;
+
     protected bool $resetSingletonInstances = true;
 
     #[Test]
@@ -41,7 +43,7 @@ final class ImageViewHelperLiaContextTest extends UnitTestCase
         $service = new RecordingImageService();
         $instancesNeeded = count($sourceSets);
         while ($instancesNeeded-- > 0) {
-            GeneralUtility::addInstance(ImageService::class, $service);
+            $this->registerImageServiceDouble($service);
             GeneralUtility::addInstance(Helper::class, new HelperFake(true, false));
         }
         $viewHelper = new ImageViewHelperFixture();
@@ -66,7 +68,7 @@ final class ImageViewHelperLiaContextTest extends UnitTestCase
     public function singleImageRenderingCarriesRequestedWidthAsMaxRenderWidth(): void
     {
         $service = new RecordingImageService($this->createFile());
-        GeneralUtility::addInstance(ImageService::class, $service);
+        $this->registerImageServiceDouble($service);
         $viewHelper = new ImageViewHelper();
         $viewHelper->setArguments($this->buildArguments([
             'src' => '42',
@@ -87,7 +89,7 @@ final class ImageViewHelperLiaContextTest extends UnitTestCase
     public function renderingWithoutWidthLeavesMaxRenderWidthAbsent(): void
     {
         $service = new RecordingImageService($this->createFile());
-        GeneralUtility::addInstance(ImageService::class, $service);
+        $this->registerImageServiceDouble($service);
         $viewHelper = new ImageViewHelper();
         $viewHelper->setArguments($this->buildArguments([
             'src' => '42',
@@ -107,7 +109,7 @@ final class ImageViewHelperLiaContextTest extends UnitTestCase
     public function renderingWithoutLiaContextAndWidthAddsNoContextKey(): void
     {
         $service = new RecordingImageService($this->createFile());
-        GeneralUtility::addInstance(ImageService::class, $service);
+        $this->registerImageServiceDouble($service);
         $viewHelper = new ImageViewHelper();
         $viewHelper->setArguments($this->buildArguments([
             'src' => '42',
